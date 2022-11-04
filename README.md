@@ -1,3 +1,3 @@
 # zeroscience.github.io
-\o\
+\o\\
 /o/
