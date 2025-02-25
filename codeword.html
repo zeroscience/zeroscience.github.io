@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- by lqwrm -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -143,7 +144,7 @@
 </head>
 <body>
     <div id="input-container">
-        <textarea id="code-input" placeholder="Paste your PHP code here..."></textarea>
+        <textarea id="code-input" placeholder="Paste your code here..."></textarea>
         <div id="options">
             <label for="start-line">Start line number: </label>
             <input type="number" id="start-line" value="1" min="1">
@@ -193,7 +194,7 @@
 
                 const codeCell = document.createElement('td');
                 codeCell.className = 'code language-php';
-                codeCell.textContent = line; // Browser escapes special characters
+                codeCell.textContent = line;
                 row.appendChild(codeCell);
 
                 outputTable.appendChild(row);
