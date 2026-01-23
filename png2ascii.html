@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Art Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --accent-green: #00ff41;
+            --accent-cyan: #00d4aa;
+            --accent-red: #ff3366;
+            --text-primary: #c0c0c0;
+            --text-secondary: #808080;
+            --border-color: #333333;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 65, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 212, 170, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 5px var(--accent-green); }
+            to { box-shadow: 0 0 20px var(--accent-cyan), 0 0 30px var(--accent-cyan); }
+        }
+
+        .header h1 {
+            color: var(--accent-green);
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--accent-green);
+            font-weight: 700;
+            letter-spacing: -2px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            font-weight: 300;
+        }
+
+        .terminal-prompt {
+            color: var(--accent-green);
+            margin-right: 8px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .control-group {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .control-group:hover::before {
+            transform: scaleX(1);
+        }
+
+        .control-group:hover {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .control-group h3 {
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            font-weight: 400;
+        }
+
+        .control-group h3::before {
+            content: '> ';
+            color: var(--accent-green);
+            margin-right: 8px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-button {
+            display: block;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, var(--bg-tertiary), #333);
+            color: var(--accent-green);
+            text-align: center;
+            border-radius: 6px;
+            font-weight: 400;
+            border: 1px solid var(--accent-green);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .file-input-button:hover {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 400;
+        }
+
+        .value-display {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--bg-tertiary);
+            outline: none;
+            -webkit-appearance: none;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.8);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+        }
+
+        .char-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--accent-green);
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .char-input:focus {
+            border-color: var(--accent-green);
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+            background: var(--bg-secondary);
+        }
+
+        .button {
+            background: linear-gradient(135deg, var(--bg-tertiary), #444);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 8px;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .button:hover::before {
+            left: 100%;
+        }
+
+        .button:hover {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .button:disabled {
+            background: var(--bg-tertiary);
+            border-color: var(--text-secondary);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .button:disabled::before {
+            display: none;
+        }
+
+        .button.danger {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .button.danger:hover {
+            background: var(--accent-red);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.4);
+        }
+
+        .button.secondary {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .button.secondary:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px rgba(0, 212, 170, 0.4);
+        }
+
+        .preview-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .preview-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .preview-box::before {
+            content: attr(data-title);
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-primary);
+            color: var(--accent-cyan);
+            padding: 4px 12px;
+            font-size: 0.9em;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .preview-box h3 {
+            margin-bottom: 20px;
+            color: var(--accent-cyan);
+            font-weight: 400;
+        }
+
+        #originalCanvas, #posterizedCanvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .ascii-output {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+
+        .ascii-header {
+            background: var(--bg-tertiary);
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ascii-header h3 {
+            color: var(--accent-green);
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .ascii-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ascii-content {
+            padding: 20px;
+            max-height: 600px;
+            overflow: auto;
+            background: var(--bg-primary);
+        }
+
+        .ascii-art {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 6px;
+            line-height: 6px;
+            white-space: pre;
+            word-wrap: break-word;
+            color: var(--accent-green);
+            text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
+            transition: color 0.3s ease;
+        }
+
+        .ascii-art.inverted {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 2px rgba(0, 212, 170, 0.3);
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+            font-weight: 400;
+            border: 1px solid;
+            font-family: inherit;
+        }
+
+        .status.success {
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .status.error {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        .no-content {
+            color: var(--text-secondary);
+            padding: 40px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.98; }
+        }
+
+        .ascii-art {
+            animation: flicker 4s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .preview-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .ascii-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1><span class="terminal-prompt">zslab@metalgear:~$</span>./png2ascii</h1>
+            <p>Advanced terminal-based image posterization & ASCII conversion system</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <h3>LOAD_IMAGE</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageInput" class="file-input" accept="image/png,image/jpg,image/jpeg,image/gif">
+                    <label for="imageInput" class="file-input-button">[BROWSE_FILES]</label>
+                </div>
+                <div id="fileName" style="margin-top: 12px; font-size: 0.9em; color: var(--text-secondary);"></div>
+            </div>
+
+            <div class="control-group">
+                <h3>PARAMETERS</h3>
+                <div class="slider-group">
+                    <label for="widthSlider">OUTPUT_WIDTH: <span id="widthValue" class="value-display">80</span> chars</label>
+                    <input type="range" id="widthSlider" class="slider" min="40" max="200" value="80">
+                </div>
+                <div class="slider-group">
+                    <label for="levelsSlider">POSTERIZE_LEVELS: <span id="levelsValue" class="value-display">4</span></label>
+                    <input type="range" id="levelsSlider" class="slider" min="2" max="10" value="4">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>CHARACTER_MAP</h3>
+                <label for="charSet">ASCII_CHARSET (dark → light):</label>
+                <input type="text" id="charSet" class="char-input" value="██▉▊▋▌▍▎▏ " placeholder="Enter characters...">
+                <div style="margin-top: 12px; font-size: 0.85em; color: var(--text-secondary);">
+                    <span class="terminal-prompt">></span> Try: ██▉▊▋▌▍▎▏  or  @%#*+=-:.  or  ●◐◑◒◓○ 
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="convertBtn" class="button" disabled>[EXECUTE_CONVERSION]</button>
+            <button id="resetBtn" class="button danger">[SYSTEM_RESET]</button>
+        </div>
+
+        <div id="statusMessage"></div>
+
+        <div class="preview-section">
+            <div class="preview-box" data-title="INPUT_IMAGE">
+                <h3>ORIGINAL_DATA</h3>
+                <canvas id="originalCanvas" style="display: none;"></canvas>
+                <div id="noImage" class="no-content">// Awaiting image input...</div>
+            </div>
+            <div class="preview-box" data-title="PROCESSED_DATA">
+                <h3>POSTERIZED_OUTPUT</h3>
+                <canvas id="posterizedCanvas" style="display: none;"></canvas>
+                <div id="noPosterized" class="no-content">// Processing pipeline idle...</div>
+            </div>
+        </div>
+
+        <div class="ascii-output" id="asciiOutput" style="display: none;">
+            <div class="ascii-header">
+                <h3><span class="terminal-prompt">></span> ASCII_RENDER_COMPLETE</h3>
+                <div class="ascii-controls">
+                    <button id="invertBtn" class="button secondary">[INVERT_COLORS]</button>
+                    <button id="copyBtn" class="button">[COPY_TO_BUFFER]</button>
+                </div>
+            </div>
+            <div class="ascii-content">
+                <div class="ascii-art" id="asciiArt"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TerminalASCIIConverter {
+            constructor() {
+                this.image = null;
+                this.originalCanvas = document.getElementById('originalCanvas');
+                this.posterizedCanvas = document.getElementById('posterizedCanvas');
+                this.originalCtx = this.originalCanvas.getContext('2d');
+                this.posterizedCtx = this.posterizedCanvas.getContext('2d');
+                this.isInverted = false;
+                this.originalCharSet = '';
+                this.originalAscii = '';
+                
+                this.initEventListeners();
+                this.updateSliderValues();
+                this.typeWriterEffect();
+            }
+
+            typeWriterEffect() {
+                // Add a subtle typing effect to the header
+                const header = document.querySelector('.header h1');
+                const originalText = header.innerHTML;
+                header.innerHTML = '';
+                
+                let i = 0;
+                const typeInterval = setInterval(() => {
+                    header.innerHTML = originalText.slice(0, i) + '█';
+                    i++;
+                    if (i > originalText.length) {
+                        clearInterval(typeInterval);
+                        header.innerHTML = originalText;
+                    }
+                }, 50);
+            }
+
+            initEventListeners() {
+                document.getElementById('imageInput').addEventListener('change', (e) => this.handleImageUpload(e));
+                document.getElementById('convertBtn').addEventListener('click', () => this.convertToASCII());
+                document.getElementById('resetBtn').addEventListener('click', () => this.systemReset());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyToBuffer());
+                document.getElementById('invertBtn').addEventListener('click', () => this.invertColors());
+                
+                // Slider updates
+                document.getElementById('widthSlider').addEventListener('input', () => this.updateSliderValues());
+                document.getElementById('levelsSlider').addEventListener('input', () => this.updateSliderValues());
+            }
+
+            updateSliderValues() {
+                document.getElementById('widthValue').textContent = document.getElementById('widthSlider').value;
+                document.getElementById('levelsValue').textContent = document.getElementById('levelsSlider').value;
+            }
+
+            handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                document.getElementById('fileName').innerHTML = `<span class="terminal-prompt">></span> LOADED: ${file.name}`;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.image = img;
+                        this.displayOriginalImage();
+                        document.getElementById('convertBtn').disabled = false;
+                        this.showStatus('Image buffer loaded successfully', 'success');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            displayOriginalImage() {
+                const maxSize = 400;
+                const scale = Math.min(maxSize / this.image.width, maxSize / this.image.height);
+                
+                this.originalCanvas.width = this.image.width * scale;
+                this.originalCanvas.height = this.image.height * scale;
+                
+                this.originalCtx.drawImage(this.image, 0, 0, this.originalCanvas.width, this.originalCanvas.height);
+                
+                document.getElementById('originalCanvas').style.display = 'block';
+                document.getElementById('noImage').style.display = 'none';
+            }
+
+            posterizeImage() {
+                const targetWidth = parseInt(document.getElementById('widthSlider').value);
+                const levels = parseInt(document.getElementById('levelsSlider').value);
+                
+                // Calculate dimensions maintaining aspect ratio
+                const aspectRatio = this.image.height / this.image.width;
+                const targetHeight = Math.floor(targetWidth * aspectRatio * 0.45); // Adjusted for terminal char ratio
+                
+                this.posterizedCanvas.width = targetWidth;
+                this.posterizedCanvas.height = targetHeight;
+                
+                // Draw scaled image
+                this.posterizedCtx.drawImage(this.image, 0, 0, targetWidth, targetHeight);
+                
+                // Get image data
+                const imageData = this.posterizedCtx.getImageData(0, 0, targetWidth, targetHeight);
+                const data = imageData.data;
+                
+                // Enhanced posterization with contrast boost
+                for (let i = 0; i < data.length; i += 4) {
+                    // Convert to grayscale with better weighting
+                    const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+                    
+                    // Apply contrast enhancement
+                    const contrast = 1.2;
+                    const enhanced = Math.max(0, Math.min(255, (gray - 128) * contrast + 128));
+                    
+                    // Posterize
+                    const step = 256 / levels;
+                    const posterized = Math.floor(enhanced / step) * step;
+                    
+                    data[i] = posterized;     // Red
+                    data[i + 1] = posterized; // Green
+                    data[i + 2] = posterized; // Blue
+                }
+                
+                this.posterizedCtx.putImageData(imageData, 0, 0);
+                
+                // Display posterized version
+                document.getElementById('posterizedCanvas').style.display = 'block';
+                document.getElementById('noPosterized').style.display = 'none';
+                
+                return imageData;
+            }
+
+            convertToASCII() {
+                if (!this.image) {
+                    this.showStatus('ERROR: No image data in buffer', 'error');
+                    return;
+                }
+
+                this.showStatus('PROCESSING: Converting to ASCII matrix...', 'success');
+                
+                // Posterize the image
+                const imageData = this.posterizeImage();
+                const data = imageData.data;
+                
+                const charSet = document.getElementById('charSet').value || '██▉▊▋▌▍▎▏ ';
+                this.originalCharSet = charSet;
+                const width = this.posterizedCanvas.width;
+                const height = this.posterizedCanvas.height;
+                
+                let ascii = '';
+                
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const index = (y * width + x) * 4;
+                        const gray = data[index];
+                        
+                        // Map grayscale to character with improved distribution
+                        const normalizedGray = gray / 255;
+                        const charIndex = Math.floor(normalizedGray * (charSet.length - 1));
+                        const finalIndex = Math.max(0, Math.min(charSet.length - 1, charIndex));
+                        
+                        ascii += charSet[charSet.length - 1 - finalIndex]; // Invert for proper contrast
+                    }
+                    ascii += '\n';
+                }
+                
+                // Display result
+                document.getElementById('asciiArt').textContent = ascii;
+                document.getElementById('asciiOutput').style.display = 'block';
+                this.isInverted = false;
+                this.originalAscii = ascii; // Store original for inversion
+                
+                // Scroll to result
+                document.getElementById('asciiOutput').scrollIntoView({ behavior: 'smooth' });
+                
+                this.showStatus('CONVERSION_COMPLETE: ASCII matrix generated', 'success');
+            }
+
+            invertColors() {
+                const asciiArtEl = document.getElementById('asciiArt');
+                const invertBtn = document.getElementById('invertBtn');
+                
+                if (!asciiArtEl.textContent) return;
+                
+                if (this.isInverted) {
+                    // Restore original
+                    asciiArtEl.textContent = this.originalAscii;
+                    asciiArtEl.classList.remove('inverted');
+                    invertBtn.textContent = '[INVERT_COLORS]';
+                    this.showStatus('PHOTOSHOP: Normal values restored', 'success');
+                } else {
+                    // Store original and create inverted version
+                    if (!this.originalAscii) {
+                        this.originalAscii = asciiArtEl.textContent;
+                    }
+                    
+                    const charSet = this.originalCharSet || '██▉▊▋▌▍▎▏ ';
+                    const invertedAscii = this.photoshopInvert(this.originalAscii, charSet);
+                    
+                    asciiArtEl.textContent = invertedAscii;
+                    asciiArtEl.classList.add('inverted');
+                    invertBtn.textContent = '[RESTORE_ORIGINAL]';
+                    this.showStatus('PHOTOSHOP: Inverted luminosity applied', 'success');
+                }
+                
+                this.isInverted = !this.isInverted;
+            }
+
+            photoshopInvert(asciiText, charSet) {
+                // Create character mapping for inversion (reverse the character set)
+                const lines = asciiText.split('\n');
+                let invertedAscii = '';
+                
+                for (let line of lines) {
+                    for (let char of line) {
+                        if (char === '\n') {
+                            invertedAscii += char;
+                            continue;
+                        }
+                        
+                        // Find the character's position in the original set
+                        const charIndex = charSet.indexOf(char);
+                        
+                        if (charIndex !== -1) {
+                            // Invert by using the opposite position in the character set
+                            const invertedIndex = charSet.length - 1 - charIndex;
+                            invertedAscii += charSet[invertedIndex];
+                        } else {
+                            // If character not found, keep it as is
+                            invertedAscii += char;
+                        }
+                    }
+                    invertedAscii += '\n';
+                }
+                
+                return invertedAscii.slice(0, -1); // Remove the extra newline at the end
+            }
+
+            copyToBuffer() {
+                const asciiText = document.getElementById('asciiArt').textContent;
+                navigator.clipboard.writeText(asciiText).then(() => {
+                    this.showStatus('SUCCESS: ASCII data copied to system buffer', 'success');
+                }).catch(() => {
+                    this.showStatus('ERROR: Failed to access system clipboard', 'error');
+                });
+            }
+
+            systemReset() {
+                // Add a loading effect for the reset
+                this.showStatus('EXECUTING: System reset sequence...', 'success');
+                
+                setTimeout(() => {
+                    this.image = null;
+                    document.getElementById('imageInput').value = '';
+                    document.getElementById('fileName').innerHTML = '';
+                    document.getElementById('originalCanvas').style.display = 'none';
+                    document.getElementById('posterizedCanvas').style.display = 'none';
+                    document.getElementById('asciiOutput').style.display = 'none';
+                    document.getElementById('noImage').style.display = 'block';
+                    document.getElementById('noPosterized').style.display = 'block';
+                    document.getElementById('convertBtn').disabled = true;
+                    document.getElementById('statusMessage').innerHTML = '';
+                    this.isInverted = false;
+                    this.originalAscii = '';
+                    
+                    // Reset sliders to default
+                    document.getElementById('widthSlider').value = 80;
+                    document.getElementById('levelsSlider').value = 4;
+                    document.getElementById('charSet').value = '██▉▊▋▌▍▎▏ ';
+                    this.updateSliderValues();
+                    
+                    this.showStatus('COMPLETE: System restored to initial state', 'success');
+                }, 500);
+            }
+
+            showStatus(message, type) {
+                const statusEl = document.getElementById('statusMessage');
+                const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+                statusEl.innerHTML = `<div class="status ${type}"><span class="terminal-prompt">[${timestamp}]</span> ${message}</div>`;
+                setTimeout(() => statusEl.innerHTML = '', 4000);
+            }
+        }
+
+        // Initialize the converter when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new TerminalASCIIConverter();
+        });
+
+        // Add some terminal-style interactivity
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'c' && document.getElementById('asciiOutput').style.display !== 'none') {
+                document.getElementById('copyBtn').click();
+            }
+        });
+    </script>
+</body>
+</html>
